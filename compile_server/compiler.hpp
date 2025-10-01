@@ -9,6 +9,7 @@
 #include "../common/util.hpp"
 #include "../common/log.hpp"
 
+
 // 只负责代码编译
 // 远端提交过来的代码
 /*
@@ -24,19 +25,16 @@ namespace ns_compiler{
     using namespace ns_log;
     class Compiler {
     public:
-        Compiler() {
-
-        }
-        ~Compiler() {
-
-        }
+        Compiler() {}
+        ~Compiler() {}
         // 返回编译成功或失败， 输入参数：编译的文件名
         // file_name: 1234     -->  ./temp/1234.cpp, ./temp/1234.exe, ./temp/1234.stderr
         static bool Compile(const std::string& file_name) {
             pid_t pid = fork();
             if (pid == 0) {
                 // 子进程, 调用编译器（程序替换）
-                int _stderr = open(PathUtil::stderr(file_name).c_str(), O_CREAT | O_WRONLY, 0644);
+                umask(0);
+                int _stderr = open(PathUtil::CompilerError(file_name).c_str(), O_CREAT | O_WRONLY, 0644);
                 if (_stderr < 0) {
                     LOG(WARNING) << "文件创建失败" << std::endl;
                     exit(1);

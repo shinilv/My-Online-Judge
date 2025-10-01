@@ -9,43 +9,16 @@
 #include <sstream>
 #include <iomanip>
 #include <string>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <atomic>
+#include <fstream> 
 
 namespace ns_util {
     static const std::string temp_path = "./temp/";
-    class PathUtil {
-    public:
-        static std::string AddSuffix(const std::string& file_name, const std::string suffix) {
-            std::string path_name = temp_path;
-            path_name += file_name;
-            path_name += suffix;
-            return path_name;
-        }
-        // 构建源文件路径 + 后缀的完整文件名
-        static std::string Src(const std::string&file_name) {
-            return AddSuffix(file_name, ".cpp");
-        }
-        // 构建可执行程序的完整路径名
-
-        static std::string Exe(const std::string& file_name) {
-            return AddSuffix(file_name, ".exe");
-        }
-
-        // 标准错误的完整路径
-        static std::string stderr(const std::string& file_name) {
-            return AddSuffix(file_name, ".stderr");
-        }
-    };
-    class FileUtil {
-    public:
-    // 判断是否文件存在， int stat(), 获取文件属性， 成功返回0
-        static bool IsFileExists(const std::string& path_name) {
-            struct stat st;
-            if (stat(path_name.c_str(), &st) == 0) {
-                return true;
-            }
-            return false;
-        }
-    };
     class TimeUtil {
     public:
         static std::string GetTimeStamp() {
@@ -68,6 +41,105 @@ namespace ns_util {
             oss << '.' << std::setw(3) << std::setfill('0') << ms.count();
 
             return oss.str();
+        }
+
+        // 获取毫秒级时间戳
+        static std::string GetTimeMs() {
+        auto now = std::chrono::system_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                      now.time_since_epoch())
+                      .count();
+            return std::to_string(ms);
+        }
+    };
+    class PathUtil {
+    public:
+        static std::string AddSuffix(const std::string& file_name, const std::string suffix) {
+            std::string path_name = temp_path;
+            path_name += file_name;
+            path_name += suffix;
+            return path_name;
+        }
+        // 构建源文件路径 + 后缀的完整文件名
+        static std::string Src(const std::string&file_name) {
+            return AddSuffix(file_name, ".cpp");
+        }
+        // 构建可执行程序的完整路径名
+
+        static std::string Exe(const std::string& file_name) {
+            return AddSuffix(file_name, ".exe");
+        }
+
+
+        // 标准错误的完整路径
+        static std::string Stderr(const std::string& file_name) {
+            return AddSuffix(file_name, ".stderr");
+        }
+        // 编译错误
+        static std::string CompilerError(const std::string&file_name) {
+            return AddSuffix(file_name, ".compiler_error");
+        }
+        // 运行时文件 stdin, stdout
+
+        static std::string Stdin(const std::string& file_name) {
+            return AddSuffix(file_name, ".stdin");
+        }
+
+        // 标准错误的完整路径
+        static std::string Stdout(const std::string& file_name) {
+            return AddSuffix(file_name, ".stdout");
+        }
+    };
+    class FileUtil {
+    public:
+
+        // 读取文件内容, 参数为文件名
+        static bool ReadFile(const std::string& target, std::string *content, bool keep) {
+            content->clear();
+            std::ifstream in(target);
+            if (!in.is_open()) {
+                std::cerr << "Open file failed: " << target << std::endl;
+                return false;
+            }
+            std::string line;
+            while (std::getline(in, line)) {
+                (*content) += line;
+                if (keep) {
+                    (*content) += "\n";  // 保留换行符
+                }
+            }
+            in.close();
+            return true;
+        }
+        // 根据时间戳，设置唯一文件名
+        static std::string UniqFileName() {
+            // 原子性来保持唯一性， 加锁
+            static std::atomic_uint id(0);
+            std::string ms = TimeUtil::GetTimeMs();
+            std::string uniq_id = std::to_string(id);
+            id++;
+            return ms + "_" + uniq_id;
+
+        }
+        // 把code写进 file_name文件中
+        static int WriteFile(const std::string& file_name, std::string& code) {
+            std::ofstream ofs(file_name);
+            if (!ofs.is_open()) {
+                // LOG(ERROR) << "打开文件失败 " << file_name << std::endl;
+                std::cerr << "Open file failed: " << file_name << std::endl;
+                return -1;
+            }
+            ofs << code;
+            return 0; // 成功返回 0
+        }
+
+    // 判断是否文件存在， int stat(), 获取文件属性， 成功返回0
+        static bool IsFileExists(const std::string& path_name) {
+            struct stat st;
+            if (stat(path_name.c_str(), &st) == 0) {
+                return true;
+            }
+            return false;
         }
     };
 }

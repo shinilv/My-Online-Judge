@@ -9,9 +9,13 @@
 
 compiler.hpp：编译代码
 runner.hpp：运行代码
-compile_run.hpp：整合运行编译
+compile_run.hpp：整合运行编译, 适配用户请求
 compile_server.cc：服务
 makefile：自动化编译
 temp目录：保存临时文件
+
+## common 通用功能设计
+
+log.hpp：日志功能
 
 

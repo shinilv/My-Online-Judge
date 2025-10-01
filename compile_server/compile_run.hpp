@@ -1,1 +1,138 @@
 #pragma once
+
+#include "compiler.hpp"
+#include "runner.hpp"
+#include "../common/util.hpp"
+#include "../common/log.hpp"
+#include <signal.h>
+
+#include <jsoncpp/json/json.h>
+
+
+using namespace ns_log;
+using namespace ns_compiler;
+using namespace ns_runner;
+using namespace ns_util;
+
+namespace ns_compile_and_run {
+    class CompileAndRun {
+    public:
+        /*
+        code > 0 异常崩溃
+        code < 0 整个过程非运行报错
+        == 0 整个过程全部完成
+        
+        */
+        static std::string CodeToDesc(const std::string &file_name,  int code) {
+            std::string desc;
+            switch (code) {
+                case -1:
+                    desc = "用户提交代码为空";
+                    break;
+                case -2:
+                    desc = "未知错误";
+                    break;
+                case -3:
+                    // desc = "代码编译时发生错误";
+                    FileUtil::ReadFile(PathUtil::Stderr(file_name), &desc, true);
+                    break;
+                case SIGABRT: // 6
+                    desc = "内存超限";
+                    break;
+                case SIGXCPU: 
+                    desc = "运行超时";
+                    break;
+                    case SIGFPE:
+                    desc = "浮点数错误";
+                break;
+                // case: break;
+                // case: break;
+                // case: break;
+                // case: break;
+                default: 
+                    desc = "未知错误" + std::to_string(code);
+                    break;
+            }
+            return desc;
+        }
+
+
+     /*
+     输入：
+     code:  用户提交的代码
+     input： 用户给自己提交的代码的对应的输入, 不做处理
+     // 时间空间要求
+
+     输出：
+        必填
+        status：状态码
+        reason： 请求结果
+        选填：
+        stdout：运行完的结果
+        stderr：我的程序运行完的错误结果
+     */
+
+        // 参数 in_json: {"code": "#incldue...", "input": "", "cpu_limit":1, "mem_limit": 10240}
+        // out_json: {"status":"0", "reason":"", "stdout":"", stderr:""}
+        static void Start(const std::string& in_json, std::string *out_json) {
+            Json::Value in_value;
+            Json::Reader reader;
+            reader.parse(in_json, in_value); // 差错
+            std::string code = in_value["code"].asString();
+            std::string input = in_value["input"].asString();
+            int cpu_limit = in_value["cpu_limit"].asInt();
+            int mem_limit = in_value["mem_limit"].asInt();
+
+            Json::Value out_value;
+            int status_code = 0, rescode;
+            std::string file_name;
+
+            if (code.size() == 0) {
+                // 差错
+                status_code = -1;
+                goto END;
+            }
+            // 形成的文件具有唯一性， 没有目录， 没有后缀
+            // 毫秒级递增的时间戳， 原子性递增唯一值。保证唯一性
+            file_name = FileUtil::UniqFileName();
+
+            if (!FileUtil::WriteFile(PathUtil::Src(file_name), code)) {
+                status_code = -2;
+                goto END;
+            }
+
+            if (!Compiler::Compile(file_name)) {
+                status_code = -3;
+                goto END;
+            }
+
+            rescode = Runner::Run(file_name, cpu_limit, mem_limit);
+            // 返回值 > 0， 程序异常， 返回值对应异常信号
+            // 返回0， 运行完成， 保存到相关临时文件中
+            // 返回 -1, 内部错误
+            if (rescode < 0) {
+                status_code = -2;
+                goto END;
+            } else if (rescode > 0) {
+                // 运行时错误
+                status_code = rescode;
+            } else {
+                status_code = 0;
+            }
+            END:
+            out_value["status"] = status_code;
+            out_value["reason"] = CodeToDesc(file_name, status_code);
+            if (status_code == 0) {
+                // 整个过程全部成功
+                std::string _stderr, _stdout;
+                FileUtil::ReadFile(PathUtil::Stdout(file_name), &_stdout, true);
+                out_value["stdout"] = _stdout;
+                FileUtil::ReadFile(PathUtil::Stderr(file_name), &_stderr, true);
+                out_value["stdout"] = _stderr;
+            } 
+            Json::StyledWriter writer;
+            *out_json = writer.write(out_value);
+        }
+
+    };
+}
