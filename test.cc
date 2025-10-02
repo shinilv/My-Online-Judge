@@ -1,14 +1,21 @@
 #include <iostream>
 #include <jsoncpp/json/json.h>
+#include <memory>
 
 int main() {
-    // 序列化 工具
     Json::Value root;
     root["code"] = "mycode";
-    root["user"] = "nilv";
+    root["user"] = "逆旅";
     root["age"] = "19";
+    std::cout << "你好" << std::endl;
 
-    Json::StyledWriter writer;
-    std::string str = writer.write(root);
+    // 使用新的StreamWriterBuilder API
+    Json::StreamWriterBuilder builder;
+    builder.settings_["indentation"] = "";  // 紧凑格式
+    builder.settings_["emitUTF8"] = true;   // 直接输出UTF-8
+    
+    std::string str = Json::writeString(builder, root);
     std::cout << str << std::endl;
+    
+    return 0;
 }

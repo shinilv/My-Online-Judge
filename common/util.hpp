@@ -93,6 +93,36 @@ namespace ns_util {
     class FileUtil {
     public:
 
+        // 删除文件
+        static void RemoveTempFile(const std::string& file_name) {
+            // 清理的文件个数不确定
+
+            std::string _src = PathUtil::Src(file_name);
+            if (FileUtil::IsFileExists(_src)) {
+                unlink(_src.c_str());
+            }
+            std::string _compiler_error = PathUtil::CompilerError(file_name);
+            if (FileUtil::IsFileExists(_compiler_error)) {
+                unlink(_compiler_error.c_str());
+            }
+            std::string _execute = PathUtil::Exe(file_name);
+            if (FileUtil::IsFileExists(_execute)) {
+                unlink(_execute.c_str());
+            }
+            std::string _stderr = PathUtil::Stderr(file_name);
+            if (FileUtil::IsFileExists(_stderr)) {
+                unlink(_stderr.c_str());
+            }
+            std::string _stdin = PathUtil::Stdin(file_name);
+            if (FileUtil::IsFileExists(_stdin)) {
+                unlink(_stdin.c_str());
+            }
+            std::string _stdout = PathUtil::Stdout(file_name);
+            if (FileUtil::IsFileExists(_stdout)) {
+                unlink(_stdout.c_str());
+            }
+        }
+
         // 读取文件内容, 参数为文件名
         static bool ReadFile(const std::string& target, std::string *content, bool keep) {
             content->clear();

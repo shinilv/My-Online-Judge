@@ -26,6 +26,9 @@ namespace ns_compile_and_run {
         static std::string CodeToDesc(const std::string &file_name,  int code) {
             std::string desc;
             switch (code) {
+                case 0:
+                    desc = "编译并运行成功！";
+                    break;
                 case -1:
                     desc = "用户提交代码为空";
                     break;
@@ -34,7 +37,7 @@ namespace ns_compile_and_run {
                     break;
                 case -3:
                     // desc = "代码编译时发生错误";
-                    FileUtil::ReadFile(PathUtil::Stderr(file_name), &desc, true);
+                    FileUtil::ReadFile(PathUtil::CompilerError(file_name), &desc, true);
                     break;
                 case SIGABRT: // 6
                     desc = "内存超限";
@@ -90,13 +93,15 @@ namespace ns_compile_and_run {
             if (code.size() == 0) {
                 // 差错
                 status_code = -1;
+                LOG(WARNING) << "代码为空" << std::endl;
                 goto END;
             }
             // 形成的文件具有唯一性， 没有目录， 没有后缀
             // 毫秒级递增的时间戳， 原子性递增唯一值。保证唯一性
             file_name = FileUtil::UniqFileName();
 
-            if (!FileUtil::WriteFile(PathUtil::Src(file_name), code)) {
+            if (FileUtil::WriteFile(PathUtil::Src(file_name), code)) {
+                
                 status_code = -2;
                 goto END;
             }
@@ -120,18 +125,27 @@ namespace ns_compile_and_run {
                 status_code = 0;
             }
             END:
-            out_value["status"] = status_code;
-            out_value["reason"] = CodeToDesc(file_name, status_code);
-            if (status_code == 0) {
-                // 整个过程全部成功
-                std::string _stderr, _stdout;
-                FileUtil::ReadFile(PathUtil::Stdout(file_name), &_stdout, true);
-                out_value["stdout"] = _stdout;
-                FileUtil::ReadFile(PathUtil::Stderr(file_name), &_stderr, true);
-                out_value["stdout"] = _stderr;
-            } 
-            Json::StyledWriter writer;
-            *out_json = writer.write(out_value);
+                out_value["status"] = status_code;
+                out_value["reason"] = CodeToDesc(file_name, status_code);
+                if (status_code == 0) {
+                    // 整个过程全部成功
+                    std::string _stderr, _stdout;
+                    FileUtil::ReadFile(PathUtil::Stdout(file_name), &_stdout, true);
+                    out_value["stdout"] = _stdout;
+                    FileUtil::ReadFile(PathUtil::Stderr(file_name), &_stderr, true);
+                    out_value["stderr"] = _stderr;  // 修正：这里应该是stderr而不是stdout
+                } 
+                
+                // 使用StreamWriterBuilder替代StyledWriter
+                Json::StreamWriterBuilder builder;
+                builder.settings_["indentation"] = "";  // 紧凑格式
+                builder.settings_["emitUTF8"] = true;   // 直接输出UTF-8字符
+                
+                *out_json = Json::writeString(builder, out_value);
+                
+
+                // 执行完毕， 需要清理所有临时文件
+                FileUtil::RemoveTempFile(file_name);
         }
 
     };

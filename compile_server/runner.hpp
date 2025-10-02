@@ -78,6 +78,7 @@ namespace ns_runner {
                 execl(_execute.c_str(), _execute.c_str(), nullptr);
 
                 // 出错
+                LOG(ERROR) << "程序替换过程失败" << std::endl;
                 exit(-1);
 
             } else {
