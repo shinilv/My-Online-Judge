@@ -7,7 +7,13 @@ using namespace httplib;
 // 编译服务随时可能被多个人请求，必须保证传递上来的code，形成源文件名称的时候， 要具有
 // 唯一性， 多个用户会相互影响
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    if (argc != 2) {
+        LOG(ERROR) << "参数不正确" << std::endl;
+        return 1;
+    }
+
     // http 让client给我们 上传一个json string
 
     Server svr;
@@ -30,7 +36,7 @@ int main() {
         }
      });
 
-    svr.listen("0.0.0.0", 9090); // 启动http服务
+    svr.listen("0.0.0.0", atoi(argv[1])); // 启动http服务
 
 
 
