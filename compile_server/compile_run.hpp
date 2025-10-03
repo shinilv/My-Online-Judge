@@ -78,13 +78,21 @@ namespace ns_compile_and_run {
         // 参数 in_json: {"code": "#incldue...", "input": "", "cpu_limit":1, "mem_limit": 10240}
         // out_json: {"status":"0", "reason":"", "stdout":"", stderr:""}
         static void Start(const std::string& in_json, std::string *out_json) {
+            LOG(INFO) << "开始处理请求" << std::endl;
             Json::Value in_value;
             Json::Reader reader;
-            reader.parse(in_json, in_value); // 差错
+            if (!reader.parse(in_json, in_value)) {
+                LOG(ERROR) << "JSON 解析失败: " << std::endl;
+                *out_json = "{\"status\": -2, \"reason\": \"JSON 解析失败\"}";
+                return;
+            }
+            // LOG(INFO) << std::endl;
             std::string code = in_value["code"].asString();
             std::string input = in_value["input"].asString();
             int cpu_limit = in_value["cpu_limit"].asInt();
             int mem_limit = in_value["mem_limit"].asInt();
+
+            // LOG(INFO) << std::endl;
 
             Json::Value out_value;
             int status_code = 0, rescode;
@@ -105,11 +113,16 @@ namespace ns_compile_and_run {
                 status_code = -2;
                 goto END;
             }
+            // LOG(INFO) << std::endl;
+
 
             if (!Compiler::Compile(file_name)) {
                 status_code = -3;
                 goto END;
             }
+            // LOG(INFO) << std::endl;
+
+
 
             rescode = Runner::Run(file_name, cpu_limit, mem_limit);
             // 返回值 > 0， 程序异常， 返回值对应异常信号
@@ -129,12 +142,15 @@ namespace ns_compile_and_run {
                 out_value["reason"] = CodeToDesc(file_name, status_code);
                 if (status_code == 0) {
                     // 整个过程全部成功
+                    LOG(INFO) << "整个过程全部成功" << std::endl;
                     std::string _stderr, _stdout;
                     FileUtil::ReadFile(PathUtil::Stdout(file_name), &_stdout, true);
                     out_value["stdout"] = _stdout;
                     FileUtil::ReadFile(PathUtil::Stderr(file_name), &_stderr, true);
                     out_value["stderr"] = _stderr;  // 修正：这里应该是stderr而不是stdout
                 } 
+            // LOG(INFO) << std::endl;
+
                 
                 // 使用StreamWriterBuilder替代StyledWriter
                 Json::StreamWriterBuilder builder;
@@ -146,6 +162,7 @@ namespace ns_compile_and_run {
 
                 // 执行完毕， 需要清理所有临时文件
                 FileUtil::RemoveTempFile(file_name);
+                LOG(INFO) << "执行完毕， 清理所有临时文件" << std::endl;
         }
 
     };

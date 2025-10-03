@@ -23,7 +23,7 @@ namespace ns_runner {
             setrlimit(RLIMIT_CPU, &cpu_rlimit);
 
             struct rlimit mem_rlimit;
-            mem_rlimit.rlim_max = RLIM64_INFINITY;
+            mem_rlimit.rlim_max = RLIM_INFINITY;
             mem_rlimit.rlim_cur = _mem_limit;
             
         }

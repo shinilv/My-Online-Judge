@@ -13,8 +13,22 @@ int main() {
     Server svr;
     
     svr.Get("/hello", [](const Request& req, Response& res) {
-        res.set_content("Hello World!", "text/plain");
+        res.set_content("Hello World!, 你好", "text/plain; charset=utf-8");
     });
+
+    // 参数 in_json: {"code": "#incldue...", "input": "", "cpu_limit":1, "mem_limit": 10240}
+    // out_json: {"status":"0", "reason":"", "stdout":"", stderr:""}
+    svr.Post("/compile_and_run", [](const Request& req, Response& resp) {
+        // 用户请求的服务正文是我们想要的json
+        std::string in_json = req.body, out_json;
+        if (!in_json.empty()) {
+			// std::cout << in_json << std::endl;
+            CompileAndRun::Start(in_json, &out_json);
+            // std::cout << in_json << std::endl;
+            // std::cout << out_json << std::endl;
+            resp.set_content(out_json, "application/json;charset=utf-8");
+        }
+     });
 
     svr.listen("0.0.0.0", 9090); // 启动http服务
 
@@ -30,7 +44,7 @@ int main() {
 
 
 
-    // 阶段测试代码
+//     // 阶段测试代码
 
 //     std::setlocale(LC_ALL, "en_US.UTF-8");
 
