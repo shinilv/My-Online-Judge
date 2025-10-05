@@ -25,6 +25,7 @@ namespace ns_runner {
             struct rlimit mem_rlimit;
             mem_rlimit.rlim_max = RLIM_INFINITY;
             mem_rlimit.rlim_cur = _mem_limit;
+            setrlimit(RLIMIT_AS, &mem_rlimit);  // 修复：使用 RLIMIT_AS 设置内存限制
             
         }
         // 指明文件名即可, 返回值int, 程序异常返回相关信号
@@ -55,6 +56,10 @@ namespace ns_runner {
             int _stderr_fd = open(_stderr.c_str(), O_CREAT|O_WRONLY, 0644);
             if (_stderr_fd < 0 || _stdin_fd < 0 || _stdout_fd < 0) {
                 LOG(ERROR) << "运行时打开标准文件失败" << std::endl;
+                // 确保关闭所有已打开的文件描述符
+                if (_stdin_fd >= 0) close(_stdin_fd);
+                if (_stdout_fd >= 0) close(_stdout_fd);
+                if (_stderr_fd >= 0) close(_stderr_fd);
                 return -1;
             }
 
@@ -71,6 +76,11 @@ namespace ns_runner {
                 dup2(_stdin_fd, 0);
                 dup2(_stdout_fd, 1);
                 dup2(_stderr_fd, 2);
+                
+                // 关闭原始文件描述符，避免泄漏
+                // close(_stdin_fd);
+                // close(_stdout_fd);
+                // close(_stderr_fd);
 
                 // 设置进程资源限制
                 SetProcLimit(cpu_limit, mem_limit);

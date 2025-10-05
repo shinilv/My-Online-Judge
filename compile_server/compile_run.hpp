@@ -115,6 +115,10 @@ namespace ns_compile_and_run {
             }
             // LOG(INFO) << std::endl;
 
+            // 添加：写入输入数据到stdin文件
+            // if (!input.empty()) {
+            //     FileUtil::WriteFile(PathUtil::Stdin(file_name), input);
+            // }
 
             if (!Compiler::Compile(file_name)) {
                 status_code = -3;
