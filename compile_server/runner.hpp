@@ -15,17 +15,23 @@ namespace ns_runner {
         Runner() {}
         ~Runner() {}
 
-        static void SetProcLimit(int _cpu_limit, int _mem_limit) {
+        static void SetProcLimit(int _cpu_limit, long _mem_limit_bytes, long _file_size_limit_bytes = 4l * 1024 * 1024) {
             // 设置cpu时长
             struct rlimit cpu_rlimit;
             cpu_rlimit.rlim_max = RLIM_INFINITY;
-            cpu_rlimit.rlim_cur = _cpu_limit;
+            cpu_rlimit.rlim_cur = _cpu_limit; // 秒
             setrlimit(RLIMIT_CPU, &cpu_rlimit);
 
             struct rlimit mem_rlimit;
             mem_rlimit.rlim_max = RLIM_INFINITY;
-            mem_rlimit.rlim_cur = _mem_limit;
+            mem_rlimit.rlim_cur = _mem_limit_bytes; // 字节
             setrlimit(RLIMIT_AS, &mem_rlimit);  // 修复：使用 RLIMIT_AS 设置内存限制
+            
+            // 限制单进程可写文件大小，防止 stdout/stderr 刷爆磁盘
+            struct rlimit fsize_rlimit;
+            fsize_rlimit.rlim_max = RLIM_INFINITY;
+            fsize_rlimit.rlim_cur = _file_size_limit_bytes; // 字节
+            setrlimit(RLIMIT_FSIZE, &fsize_rlimit);
             
         }
         // 指明文件名即可, 返回值int, 程序异常返回相关信号
@@ -52,8 +58,8 @@ namespace ns_runner {
             // 打开相关文件
             umask(0);
             int _stdin_fd = open(_stdin.c_str(), O_CREAT | O_RDONLY, 0644);
-            int _stdout_fd = open(_stdout.c_str(), O_CREAT|O_WRONLY, 0644);
-            int _stderr_fd = open(_stderr.c_str(), O_CREAT|O_WRONLY, 0644);
+            int _stdout_fd = open(_stdout.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+            int _stderr_fd = open(_stderr.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
             if (_stderr_fd < 0 || _stdin_fd < 0 || _stdout_fd < 0) {
                 LOG(ERROR) << "运行时打开标准文件失败" << std::endl;
                 // 确保关闭所有已打开的文件描述符
@@ -76,11 +82,10 @@ namespace ns_runner {
                 dup2(_stdin_fd, 0);
                 dup2(_stdout_fd, 1);
                 dup2(_stderr_fd, 2);
-                
                 // 关闭原始文件描述符，避免泄漏
-                // close(_stdin_fd);
-                // close(_stdout_fd);
-                // close(_stderr_fd);
+                close(_stdin_fd);
+                close(_stdout_fd);
+                close(_stderr_fd);
 
                 // 设置进程资源限制
                 SetProcLimit(cpu_limit, mem_limit);

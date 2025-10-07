@@ -41,7 +41,8 @@ namespace ns_compiler{
                 }
                 // 重定向
                 dup2(_stderr, 2);
-                // close(_stderr);  // 关闭原始文件描述符，避免泄漏
+                // 关闭原始文件描述符，避免泄漏
+                close(_stderr);
                 // 进程替换，不影响文件描述符表
                 execlp("g++", "g++", "-o", PathUtil::Exe(file_name).c_str(),
                 PathUtil::Src(file_name).c_str(), "-std=c++11", nullptr);

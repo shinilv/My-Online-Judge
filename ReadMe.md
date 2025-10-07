@@ -36,6 +36,8 @@ M: model， 和数据交互的模块， 比如 对题库进行增删查改
 oj_model.hpp
 
 V: view 进行页面渲染， 展示给用户
+ctemplate 库 进行网页渲染
+
 oj_view.hpp
 
 C: control， 控制器， 核心业务逻辑  

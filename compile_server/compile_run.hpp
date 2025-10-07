@@ -90,7 +90,7 @@ namespace ns_compile_and_run {
             std::string code = in_value["code"].asString();
             std::string input = in_value["input"].asString();
             int cpu_limit = in_value["cpu_limit"].asInt();
-            int mem_limit = in_value["mem_limit"].asInt();
+            int mem_limit_mb = in_value["mem_limit"].asInt();
 
             // LOG(INFO) << std::endl;
 
@@ -106,6 +106,8 @@ namespace ns_compile_and_run {
             }
             // 形成的文件具有唯一性， 没有目录， 没有后缀
             // 毫秒级递增的时间戳， 原子性递增唯一值。保证唯一性
+            // 确保 temp 目录存在
+            PathUtil::EnsureTempDir();
             file_name = FileUtil::UniqFileName();
 
             if (FileUtil::WriteFile(PathUtil::Src(file_name), code)) {
@@ -128,7 +130,8 @@ namespace ns_compile_and_run {
 
 
 
-            rescode = Runner::Run(file_name, cpu_limit, mem_limit);
+            // 将内存限制从 MB 转为字节后传入 Runner
+            rescode = Runner::Run(file_name, cpu_limit, (long)mem_limit_mb * 1024 * 1024);
             // 返回值 > 0， 程序异常， 返回值对应异常信号
             // 返回0， 运行完成， 保存到相关临时文件中
             // 返回 -1, 内部错误
@@ -149,9 +152,20 @@ namespace ns_compile_and_run {
                     LOG(INFO) << "整个过程全部成功" << std::endl;
                     std::string _stderr, _stdout;
                     FileUtil::ReadFile(PathUtil::Stdout(file_name), &_stdout, true);
-                    out_value["stdout"] = _stdout;
                     FileUtil::ReadFile(PathUtil::Stderr(file_name), &_stderr, true);
-                    out_value["stderr"] = _stderr;  // 修正：这里应该是stderr而不是stdout
+
+                    // 限制回传大小（各 64KB），避免响应体过大
+                    const size_t kMaxReturn = 64 * 1024;
+                    if (_stdout.size() > kMaxReturn) {
+                        _stdout.resize(kMaxReturn);
+                        _stdout += "\n...[truncated]";
+                    }
+                    if (_stderr.size() > kMaxReturn) {
+                        _stderr.resize(kMaxReturn);
+                        _stderr += "\n...[truncated]";
+                    }
+                    out_value["stdout"] = _stdout;
+                    out_value["stderr"] = _stderr;  
                 } 
             // LOG(INFO) << std::endl;
 

@@ -21,6 +21,7 @@ namespace ns_util {
     static const std::string temp_path = "./temp/";
     class TimeUtil {
     public:
+        // 获取时间戳
         static std::string GetTimeStamp() {
             using namespace std::chrono;
 
@@ -45,15 +46,22 @@ namespace ns_util {
 
         // 获取毫秒级时间戳
         static std::string GetTimeMs() {
-        auto now = std::chrono::system_clock::now();
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                      now.time_since_epoch())
-                      .count();
+            auto now = std::chrono::system_clock::now();
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        now.time_since_epoch())
+                        .count();
             return std::to_string(ms);
         }
     };
     class PathUtil {
     public:
+        // 确保临时目录存在
+        static void EnsureTempDir() {
+            struct stat st;
+            if (stat(temp_path.c_str(), &st) != 0) {
+                mkdir(temp_path.c_str(), 0755);
+            }
+        }
         static std::string AddSuffix(const std::string& file_name, const std::string suffix) {
             std::string path_name = temp_path;
             path_name += file_name;
@@ -171,5 +179,32 @@ namespace ns_util {
             }
             return false;
         }
+    };
+
+    // 字符串工具
+    class StringUtil {
+    public:
+        // 分割字符串
+        // 分割字符串， 分割符为 delim， 分割结果保存在 result 中
+        static void SplitString(const std::string& str, const std::string& delim, std::vector<std::string>* result) {
+            // 处理空字符串的情况
+            if (str.empty()) {
+                return;
+            }
+        
+            size_t start = 0;
+            size_t end = str.find(delim);
+            
+            // 遍历分割字符串
+            while (end != std::string::npos) {
+                result->push_back(str.substr(start, end - start));  // 获取分割部分
+                start = end + delim.length();  // 更新起始位置
+                end = str.find(delim, start);  // 查找下一个分隔符
+            }
+            
+            // 添加最后一部分（即分隔符后面的部分）
+            result->push_back(str.substr(start));
+        }
+        
     };
 }
