@@ -2,6 +2,7 @@
 #include "../common/httplib.h"
 #include "../common/log.hpp"
 #include "oj_control.hpp"
+#include <jsoncpp/json/json.h>
 
 
 using namespace ns_log;
@@ -9,7 +10,6 @@ using namespace httplib;
 using namespace ns_control;
 
 int main(int argc, char* argv[]) {
-
     // 测试 分隔符
 
     // std::string str = "1 判断回文数 简单 1 300000";
@@ -34,9 +34,11 @@ int main(int argc, char* argv[]) {
     svr.Get("/all_questions", [&ctrl](const Request& req, Response& resp) {
         // 获取所有题目列表
         std::string html;
-        ctrl.AllQuestions(&html);
-        
-        resp.set_content(html, "text/html; charset=utf-8");
+        if (ctrl.AllQuestions(&html)) {
+            resp.set_content(html, "text/html; charset=utf-8");
+        } else {
+            resp.set_content("获取题目列表失败", "text/html; charset=utf-8");
+        }
     });
 
     // 根据题目编号， 获取题目内容, question/100, 
@@ -45,17 +47,27 @@ int main(int argc, char* argv[]) {
         // 正则匹配到的内容在 matches[1]中
         std::string number = req.matches[1];
         std::string html;
-        ctrl.Question(number, html);
-        resp.set_content(html, "text/html; charset=utf-8");
+        if (ctrl.OneQuestion(number, &html)) {
+            resp.set_content(html, "text/html; charset=utf-8");
+        } else {
+            resp.set_content("题目不存在", "text/html; charset=utf-8");
+        }
     });
 
     // 用户提交代码， 使用我们的判题功能
-    svr.Get(R"(/judge/(\d+))", [](const Request& req, Response& resp) {
+    svr.Post(R"(/judge/(\d+))", [&ctrl](const Request& req, Response& resp) {
         // 正则匹配到的内容在 matches[1]中
         std::string number = req.matches[1];
-        resp.set_content("指定题目的判题: " + number, "text/plain; charset=utf-8");
+        std::string result_json;
+        ctrl.Judge(number, req.body, &result_json);
+        resp.set_content(result_json, "application/json;charset=utf-8");
+
     });
+    
+    // 本地测试功能 - 调用 compile_server
+    
     svr.set_base_dir("./wwwroot");
+
 
 
     svr.listen("0.0.0.0", atoi(argv[1])); // 启动http服务

@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <atomic>
 #include <fstream> 
+#include <vector>
 
 namespace ns_util {
     static const std::string temp_path = "./temp/";

@@ -48,16 +48,16 @@ namespace ns_model {
         
         bool LoadQuestionList(const std::string& question_list) {
             // 加载配置文件
-            ifstream ifs(question_list);
+            std::ifstream ifs(question_list);
             if (!ifs.is_open()) {
                 LOG(ERROR) << "文件打开失败" << std::endl;
                 return false;
             }
             std::string line;
             // 按行读取文件
-            while (getline(ifs, line)) {
+            while (std::getline(ifs, line)) {
                 std::vector<std::string> result;
-                StringUtil::SplitString(line, " ", &result);
+                ns_util::StringUtil::SplitString(line, " ", &result);
                 if (result.size() != 5) {
                     LOG(WARNING) << "读取出现问题" << std::endl;
                     continue;
@@ -68,7 +68,7 @@ namespace ns_model {
                 question.difficulty = result[2];
                 question.cpu_limit = std::stoi(result[3]);
                 question.mem_limit = std::stoi(result[4]);  
-                const std::string  question_number_path = question_path;
+                std::string question_number_path = question_path;
                 question_number_path += question.number;
                 question_number_path += "/";
 
@@ -85,7 +85,7 @@ namespace ns_model {
         }
         // 查询所有题目
         bool GetAllQuestions(std::vector<Question>* questions) {
-            if (questions.size() == 0) {
+            if (questions == nullptr) {
                 LOG(ERROR) << "题目列表为空" << std::endl;
                 return false;
             }
@@ -97,7 +97,7 @@ namespace ns_model {
             return true;
         }
         // 查询单个题目
-        void GetOneQuestion(const std::string& number, Question* question) {
+        bool GetOneQuestion(const std::string& number, Question* question) {
             const auto& iter = question_map.find(number);
             if (iter == question_map.end()) {
                 LOG(ERROR) << "获取题目失败" << std::endl;

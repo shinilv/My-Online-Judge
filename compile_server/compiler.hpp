@@ -45,7 +45,7 @@ namespace ns_compiler{
                 close(_stderr);
                 // 进程替换，不影响文件描述符表
                 execlp("g++", "g++", "-o", PathUtil::Exe(file_name).c_str(),
-                PathUtil::Src(file_name).c_str(), "-std=c++11", nullptr);
+                PathUtil::Src(file_name).c_str(), "-std=c++11", "-D", "COMPILER_ONLINE", nullptr);
                 LOG(ERROR) << "启动编译器g++失败， 可能是参数错误" << std::endl;
                 exit(2);
             } else if (pid < 0) {

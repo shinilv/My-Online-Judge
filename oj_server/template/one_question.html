@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} - 在线编程平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .question-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .question-meta {
+            display: flex;
+            gap: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .difficulty {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .difficulty-easy {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .difficulty-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .difficulty-hard {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .problem-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .code-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .problem-description {
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .code-editor {
+            width: 100%;
+            height: 400px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            resize: vertical;
+            background: #f8f9fa;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .test-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .test-output {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .test-success {
+            border-left: 4px solid #27ae60;
+            background: #d4edda;
+        }
+        
+        .test-error {
+            border-left: 4px solid #e74c3c;
+            background: #f8d7da;
+        }
+        
+        .test-warning {
+            border-left: 4px solid #f39c12;
+            background: #fff3cd;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="question-title">{{TITLE}}</h1>
+            <div class="question-meta">
+                <span>题目编号: {{NUMBER}}</span>
+                <span>难度: <span class="difficulty difficulty-{{DIFFICULTY_CLASS}}">{{DIFFICULTY}}</span></span>
+                <span>时间限制: {{CPU_LIMIT}}s</span>
+                <span>内存限制: {{MEM_LIMIT}}MB</span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="problem-panel">
+                <h2 class="panel-title">📝 题目描述</h2>
+                <div class="problem-description">{{DESC}}</div>
+            </div>
+            
+            <div class="code-panel">
+                <h2 class="panel-title">💻 代码编辑器</h2>
+                <form id="codeForm">
+                    <textarea name="code" id="codeEditor" class="code-editor" placeholder="在这里编写你的代码...">{{HEADER}}</textarea>
+                    <div class="actions">
+                        <button type="button" class="btn btn-primary" onclick="runTest()">🧪 本地测试</button>
+                        <button type="button" class="btn btn-success" onclick="submitCode()">🚀 提交代码</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetCode()">🔄 重置代码</button>
+                    </div>
+                </form>
+                
+                <!-- 测试结果面板 -->
+                <div id="testResult" class="test-result" style="display: none;">
+                    <h3 class="panel-title">📊 测试结果</h3>
+                    <div id="testOutput" class="test-output"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function resetCode() {
+            document.getElementById('codeEditor').value = '{{HEADER}}';
+        }
+        
+        function submitCode() {
+            const form = document.getElementById('codeForm');
+            form.action = '/judge/{{NUMBER}}';
+            form.method = 'POST';
+            form.submit();
+        }
+        
+        async function runTest() {
+            const code = document.getElementById('codeEditor').value;
+            const testResult = document.getElementById('testResult');
+            const testOutput = document.getElementById('testOutput');
+            
+            if (!code.trim()) {
+                showTestResult('error', '代码不能为空！');
+                return;
+            }
+            
+            // 显示加载状态
+            showTestResult('loading', '<span class="loading"></span>正在编译和运行测试...');
+            
+            try {
+                const response = await fetch('/test/{{NUMBER}}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        input: '{{TEST_INPUT}}'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 0) {
+                    showTestResult('success', 
+                        `✅ 编译成功！\n\n📤 输出结果:\n${result.stdout}\n\n⏱️ 运行时间: ${result.runtime || 'N/A'}ms`
+                    );
+                } else {
+                    let errorMsg = `❌ 运行失败 (状态码: ${result.status})\n\n`;
+                    if (result.stderr) {
+                        errorMsg += `错误信息:\n${result.stderr}\n\n`;
+                    }
+                    if (result.stdout) {
+                        errorMsg += `输出:\n${result.stdout}`;
+                    }
+                    showTestResult('error', errorMsg);
+                }
+            } catch (error) {
+                showTestResult('error', `❌ 网络错误: ${error.message}`);
+            }
+        }
+        
+        function showTestResult(type, message) {
+            const testResult = document.getElementById('testResult');
+            const testOutput = document.getElementById('testOutput');
+            
+            testResult.style.display = 'block';
+            testResult.className = `test-result test-${type}`;
+            testOutput.innerHTML = message;
+        }
+    </script>
+</body>
+</html>

@@ -30,6 +30,8 @@ cpp-httplib 轻量级网络库, 阻塞式
 2. 编辑区域页面
 3. 判题功能（compile_sever）
 
+目录question： 题目信息
+
 
 M - V - C
 M: model， 和数据交互的模块， 比如 对题库进行增删查改
@@ -60,4 +62,11 @@ oj_control.hpp
 
 这两块内容， 通过题目的编号产生关联
 
+
+## 负载均衡
+
+~~~
+目录conf
+service_machine.conf     # 机器
+~~~
 

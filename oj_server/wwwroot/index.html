@@ -1,14 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>在线编程平台</title>
+    <script>
+        // 自动重定向到题目列表
+        window.location.href = '/all_questions';
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        .loading {
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World</h1>
-    <a href="/all_questions">所有题目</a>
-    <a href="/question/100">题目100</a>
-    <a href="/judge/100">判题100</a>
+    <div class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">正在加载题目列表...</div>
+    </div>
 </body>
 </html>
