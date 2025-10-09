@@ -227,7 +227,8 @@ namespace ns_control {
             Json::Value compile_value;
             std::string code = in_value["code"].asString();
             compile_value["input"] = in_value["input"].asString();
-            compile_value["code"] =  code + q.tail;
+            // LOG(INFO) << code << std::endl;
+            compile_value["code"] =  code + "\n" + q.tail;
             compile_value["cpu_limit"] = q.cpu_limit;
             compile_value["mem_limit"] = q.mem_limit;
 

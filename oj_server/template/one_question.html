@@ -104,18 +104,20 @@
             padding: 15px;
             border-radius: 4px;
             border: 1px solid #e9ecef;
+
+            /* 新增：滚动条 */
+            max-height: 400px;   /* 你可以根据页面高度调整，比如 300px~600px */
+            overflow-y: auto;    /* 垂直滚动条 */
         }
+
         
-        .code-editor {
+        /* ACE 编辑器容器 */
+        #aceEditor {
             width: 100%;
             height: 400px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 14px;
             border: 1px solid #e9ecef;
             border-radius: 4px;
-            padding: 15px;
-            resize: vertical;
-            background: #f8f9fa;
+            overflow: hidden;
         }
         
         .btn {
@@ -220,7 +222,7 @@
                 <span>题目编号: {{NUMBER}}</span>
                 <span>难度: <span class="difficulty difficulty-{{DIFFICULTY_CLASS}}">{{DIFFICULTY}}</span></span>
                 <span>时间限制: {{CPU_LIMIT}}s</span>
-                <span>内存限制: {{MEM_LIMIT}}MB</span>
+                <span>内存限制: {{MEM_LIMIT}}KB</span>
             </div>
         </div>
         
@@ -231,12 +233,17 @@
             </div>
             
             <div class="code-panel">
-                <h2 class="panel-title">💻 代码编辑器</h2>
+                <h2 class="panel-title">💻 代码编辑器（ACE）</h2>
                 <form id="codeForm">
-                    <textarea name="code" id="codeEditor" class="code-editor" placeholder="在这里编写你的代码...">{{HEADER}}</textarea>
+                    <!-- ACE 编辑器会替代这个区域 -->
+                    <div id="aceEditor"> </div>
+
+                    <!-- 隐藏 textarea，用于 form 提交（兼容后端） -->
+                    <textarea id="codeHidden" name="code" style="display:none;"></textarea>
+
                     <div class="actions">
                         <button type="button" class="btn btn-primary" onclick="runTest()">🧪 本地测试</button>
-                        <button type="button" class="btn btn-success" onclick="submitCode()">🚀 提交代码</button>
+                        <!-- <button type="button" class="btn btn-success" onclick="submitCode()">🚀 提交代码</button> -->
                         <button type="button" class="btn btn-secondary" onclick="resetCode()">🔄 重置代码</button>
                     </div>
                 </form>
@@ -244,78 +251,126 @@
                 <!-- 测试结果面板 -->
                 <div id="testResult" class="test-result" style="display: none;">
                     <h3 class="panel-title">📊 测试结果</h3>
-                    <div id="testOutput" class="test-output"></div>
+                    <div id="testOutput" class="test-output" aria-live="polite"></div>
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- 引入 ACE 编辑器（CDN） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.js" integrity="" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ext-language_tools.min.js" integrity="" crossorigin="anonymous"></script>
     <script>
+        // 初始化 ACE 编辑器
+        const editor = ace.edit('aceEditor');
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: true,
+            enableLiveAutocompletion: false,
+            fontSize: '14px',
+            showPrintMargin: false,
+            wrap: true,
+        });
+        editor.session.setMode('ace/mode/c_cpp');
+        editor.setTheme('ace/theme/monokai');
+
+        // 将后端模板 HEADER 放入编辑器（不使用 innerHTML，直接替换占位）
+        const initialCode = `{{HEADER}}`;
+        editor.session.setValue(initialCode || "");
+
+        // 使 Tab 插入空格（ACE 默认可配置）
+        editor.getSession().setTabSize(4);
+        editor.getSession().setUseSoftTabs(true);
+
         function resetCode() {
-            document.getElementById('codeEditor').value = '{{HEADER}}';
+            editor.session.setValue(initialCode || "");
+            showTestResult('success', '编辑器已重置为初始模板。');
         }
-        
-        function submitCode() {
-            const form = document.getElementById('codeForm');
-            form.action = '/judge/{{NUMBER}}';
-            form.method = 'POST';
-            form.submit();
-        }
-        
+
+
         async function runTest() {
-            const code = document.getElementById('codeEditor').value;
-            const testResult = document.getElementById('testResult');
-            const testOutput = document.getElementById('testOutput');
+            const code = editor.getValue();
             
             if (!code.trim()) {
                 showTestResult('error', '代码不能为空！');
                 return;
             }
-            
-            // 显示加载状态
+
             showTestResult('loading', '<span class="loading"></span>正在编译和运行测试...');
-            
+
             try {
-                const response = await fetch('/test/{{NUMBER}}', {
+                const response = await fetch('/judge/{{NUMBER}}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         code: code,
-                        input: '{{TEST_INPUT}}'
+                        input: `{{TEST_INPUT}}`
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.status === 0) {
-                    showTestResult('success', 
-                        `✅ 编译成功！\n\n📤 输出结果:\n${result.stdout}\n\n⏱️ 运行时间: ${result.runtime || 'N/A'}ms`
-                    );
-                } else {
-                    let errorMsg = `❌ 运行失败 (状态码: ${result.status})\n\n`;
+                    // 编译成功，运行可能成功或失败
+                    let msg = `✅ 编译成功！\n\n`;
+                    if (result.stdout) msg += `📤 输出结果:\n${result.stdout}\n\n`;
+                    msg += `⏱️ 运行时间: ${result.runtime || 'N/A'}ms`;
+
                     if (result.stderr) {
-                        errorMsg += `错误信息:\n${result.stderr}\n\n`;
+                        msg += `\n⚠️ 运行时错误:\n${result.stderr}`;
                     }
+
+                    showTestResult('success', escapeHtml(msg));
+                } else {
+                    // 编译或运行失败
+                    let errorMsg = `❌ 运行失败 (状态码: ${result.status})\n\n`;
+
+                    if (result.reason) {
+                        errorMsg += `💥 编译/运行错误:\n${result.reason}\n\n`;
+                    }
+
                     if (result.stdout) {
-                        errorMsg += `输出:\n${result.stdout}`;
+                        errorMsg += `📤 输出:\n${result.stdout}`;
                     }
-                    showTestResult('error', errorMsg);
+
+                    showTestResult('error', escapeHtml(errorMsg));
                 }
             } catch (error) {
                 showTestResult('error', `❌ 网络错误: ${error.message}`);
             }
         }
-        
+
+
         function showTestResult(type, message) {
             const testResult = document.getElementById('testResult');
             const testOutput = document.getElementById('testOutput');
-            
-            testResult.style.display = 'block';
-            testResult.className = `test-result test-${type}`;
-            testOutput.innerHTML = message;
+
+            testResult.style.display = 'block';  // 显示测试结果区域
+            testResult.className = `test-result test-${type}`;  // 动态添加状态类（如 success、error、loading）
+
+            if (type === 'loading') {
+                testOutput.innerHTML = message;  // 显示 loading 状态
+            } else {
+                testOutput.textContent = message;  // 防止 HTML 注入，安全地显示文本
+            }
         }
+
+        // 简单的 HTML 转义（用于显示从后端来的文本）
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // 提交时也会保证隐藏域更新（防止 JS 被禁用或其他情况）
+        document.getElementById('codeForm').addEventListener('submit', function() {
+            document.getElementById('codeHidden').value = editor.getValue();
+        });
     </script>
 </body>
 </html>

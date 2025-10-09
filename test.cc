@@ -6,7 +6,7 @@
 using namespace ns_util;
 
 int main() {
-    std::ifstream in("./oj_server/conf/service_machine.conf  ");
+    std::ifstream in("./oj_server/conf/service_machine.conf");
     std::string line;
     if (!in.is_open()) {
         std::cout << false << '\n';
