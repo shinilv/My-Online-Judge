@@ -243,7 +243,7 @@
 
                     <div class="actions">
                         <button type="button" class="btn btn-primary" onclick="runTest()">🧪 本地测试</button>
-                        <!-- <button type="button" class="btn btn-success" onclick="submitCode()">🚀 提交代码</button> -->
+                        <button type="button" class="btn btn-success" onclick="submitCode()">🚀 提交代码</button>
                         <button type="button" class="btn btn-secondary" onclick="resetCode()">🔄 重置代码</button>
                     </div>
                 </form>
@@ -316,7 +316,7 @@
                     // 编译成功，运行可能成功或失败
                     let msg = `✅ 编译成功！\n\n`;
                     if (result.stdout) msg += `📤 输出结果:\n${result.stdout}\n\n`;
-                    msg += `⏱️ 运行时间: ${result.runtime || 'N/A'}ms`;
+                    // msg += `⏱️ 运行时间: ${result.runtime || 'N/A'}ms`;
 
                     if (result.stderr) {
                         msg += `\n⚠️ 运行时错误:\n${result.stderr}`;
@@ -329,6 +329,63 @@
 
                     if (result.reason) {
                         errorMsg += `💥 编译/运行错误:\n${result.reason}\n\n`;
+                    }
+
+                    if (result.stdout) {
+                        errorMsg += `📤 输出:\n${result.stdout}`;
+                    }
+
+                    showTestResult('error', escapeHtml(errorMsg));
+                }
+            } catch (error) {
+                showTestResult('error', `❌ 网络错误: ${error.message}`);
+            }
+        }
+
+
+        async function submitCode() {
+            const code = editor.getValue();
+            
+            if (!code.trim()) {
+                showTestResult('error', '代码不能为空！');
+                return;
+            }
+
+            showTestResult('loading', '<span class="loading"></span>正在提交代码...');
+
+            try {
+                const response = await fetch('/runtest/{{NUMBER}}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        input: `{{TEST_INPUT}}`
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 0) {
+                    // 编译成功，运行可能成功或失败
+                    let msg = `✅ 编译成功！\n\n`;
+                    if (result.stdout) msg += `📤 输出结果:\n${result.stdout}\n\n`;
+                    // msg += `⏱️ 运行时间: ${result.runtime || 'N/A'}ms`;
+
+                    if (result.stderr) {
+                        msg +=  `📤 输出结果:\n${result.stderr}\n\n`;
+                    } else {
+                        msg += `\n✅ 答案正确\n`;
+                    }
+
+                    showTestResult('success', escapeHtml(msg));
+                } else {
+                    // 编译或运行失败
+                    let errorMsg = `❌ 运行失败 (状态码: ${result.status})\n\n`;
+
+                    if (result.reason) {
+                        errorMsg += `💥 编译/运行/答案错误:\n${result.reason}\n\n`;
                     }
 
                     if (result.stdout) {

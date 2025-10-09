@@ -39,6 +39,9 @@ namespace ns_compile_and_run {
                     // desc = "代码编译时发生错误";
                     FileUtil::ReadFile(PathUtil::CompilerError(file_name), &desc, true);
                     break;
+                case -5: 
+                    desc = "答案错误";
+                    break;
                 case SIGABRT: // 6
                     desc = "内存超限";
                     break;
@@ -135,7 +138,10 @@ namespace ns_compile_and_run {
             // 返回值 > 0， 程序异常， 返回值对应异常信号
             // 返回0， 运行完成， 保存到相关临时文件中
             // 返回 -1, 内部错误
-            if (rescode < 0) {
+            if (rescode == -5) {
+                status_code = -5;
+                goto END;
+            } else if (rescode < 0) {
                 status_code = -2;
                 goto END;
             } else if (rescode > 0) {
@@ -179,7 +185,7 @@ namespace ns_compile_and_run {
                 
 
                 // 执行完毕， 需要清理所有临时文件
-                FileUtil::RemoveTempFile(file_name);
+                // FileUtil::RemoveTempFile(file_name);
                 LOG(INFO) << "执行完毕， 清理所有临时文件" << std::endl;
         }
 

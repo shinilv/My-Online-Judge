@@ -6,6 +6,5 @@ public:
     bool isPalindrome(int x) {
         // 将你的代码写在这里
 
-        return true;
     }
 };

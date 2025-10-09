@@ -83,7 +83,7 @@ namespace ns_view {
             dict.SetValue("MEM_LIMIT", std::to_string(q.mem_limit));
             
             // 设置测试输入（从tail.cpp中提取）
-            dict.SetValue("TEST_INPUT", q.tail);
+            // dict.SetValue("TEST_INPUT", q.tail);
             
             // 根据难度设置CSS类
             std::string difficulty_class;

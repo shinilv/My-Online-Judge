@@ -9,7 +9,7 @@ void Test1() {
     if (ret == 5) {
         std::cout << "通过用例1通过 ...OK!" << std::endl;
     } else {
-        std::cout << "测试5不通过 ...Failed!" << std::endl;
+        std::cout << "测试1不通过 ...Failed!" << std::endl;
     }
 }
 
@@ -18,11 +18,14 @@ void Test2() {
     if (ret == 6) {
         std::cout << "通过用例2通过 ...OK!" << std::endl;
     } else {
-        std::cout << "测试6不通过 ...Failed!" << std::endl;
+        std::cout << "测试2不通过 ...Failed!" << std::endl;
     }
 }
+
+
 
 int main() {
     Test1();
     Test2();
+    
 }

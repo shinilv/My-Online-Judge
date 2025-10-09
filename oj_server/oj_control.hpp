@@ -213,7 +213,7 @@ namespace ns_control {
 
         // 判题功能
         // id, code, input
-        void Judge(const std::string number, const std::string in_json, std::string *out_json) {
+        void Judge(const std::string number, const std::string in_json, std::string *out_json, bool IsRunTest) {
             // 根据题目编号， 得到题目信息
             Question q;
             _model.GetOneQuestion(number, &q);
@@ -228,7 +228,8 @@ namespace ns_control {
             std::string code = in_value["code"].asString();
             compile_value["input"] = in_value["input"].asString();
             // LOG(INFO) << code << std::endl;
-            compile_value["code"] =  code + "\n" + q.tail;
+            if (IsRunTest) compile_value["code"] =  code + "\n" + q.test;
+            else compile_value["code"] =  code + "\n" + q.tail;
             compile_value["cpu_limit"] = q.cpu_limit;
             compile_value["mem_limit"] = q.mem_limit;
 

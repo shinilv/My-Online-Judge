@@ -54,12 +54,22 @@ int main(int argc, char* argv[]) {
         }
     });
 
-    // 用户提交代码， 使用我们的判题功能
+    // 用户本地测试代码， 使用我们的判题功能
     svr.Post(R"(/judge/(\d+))", [&ctrl](const Request& req, Response& resp) {
         // 正则匹配到的内容在 matches[1]中
         std::string number = req.matches[1];
         std::string result_json;
-        ctrl.Judge(number, req.body, &result_json);
+        ctrl.Judge(number, req.body, &result_json, 0);
+        resp.set_content(result_json, "application/json;charset=utf-8");
+
+    });
+
+    // 用户提交代码， 判题
+    svr.Post(R"(/runtest/(\d+))", [&ctrl](const Request& req, Response& resp) {
+        std::string number = req.matches[1];
+        std::string result_json;
+        LOG(INFO) << "test..." << std::endl;
+        ctrl.Judge(number, req.body, &result_json, 1);
         resp.set_content(result_json, "application/json;charset=utf-8");
 
     });

@@ -32,6 +32,8 @@ namespace ns_model {
         std::string desc; // 题目描述
         std::string header; // 题目预设置的代码
         std::string tail; // 题目测试用例代码
+
+        std::string test; // 题目运行代码
     };
     const std::string question_list_path = "question/questions.list";
     const std::string question_path = "question/";
@@ -75,6 +77,7 @@ namespace ns_model {
                 FileUtil::ReadFile(question_number_path + "desc.txt", &(question.desc), true);
                 FileUtil::ReadFile(question_number_path + "header.cpp", &(question.header), true);
                 FileUtil::ReadFile(question_number_path + "tail.cpp", &(question.tail), true);
+                FileUtil::ReadFile(question_number_path + "test.cpp", &(question.test), true);
                 
 
 
