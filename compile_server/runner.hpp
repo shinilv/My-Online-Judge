@@ -102,7 +102,11 @@ namespace ns_runner {
                 close(_stdout_fd);
                 int status = 0;
                 waitpid(pid, &status, 0);
-                LOG(INFO) << "运行完毕" << std::endl;
+                // LOG(INFO) << "运行完毕" << std::endl;
+                // LOG(INFO) << (status) << std::endl;
+                if (status == 64256) {
+                    return -5;
+                }
                 // 程序异常退出，收到信号
                 return status & 0x7f;
             }

@@ -4,33 +4,38 @@
 
 #endif
 
-int Test1() {
+void Test1() {
     int ret = Solution().Max({1, 2, 3, 4, 5});
+    std::cout << ret << std::endl;
+
     if (ret != 5) {
-        return -5;
+        exit(-5);
     }
-    return 0;
 }
 
-int Test2() {
+void Test2() {
     int ret = Solution().Max({1, 2, 3, 4, 6});
+    std::cout << ret << std::endl;
+
     if (ret != 6) {
-        return -5;
+        exit(-5);
     }
-    return 0;
+
 }
 
-int Test3() {
+void Test3() {
     int ret = Solution().Max({1, 2, 3, 4, 6, 7, 8, 9, 100});
+    std::cout << ret << std::endl;
+
     if (ret != 100) {
-        return -5;
+        exit(-5);
     }
-    return 0;
+
 }
 
 int main() {
-    if (Test1() == -5) return -5;
-    if (Test2() == -5) return -5;
-    if (Test3() == -5) return -5;
+    Test1();
+    Test2();
+    Test3();
     return 0;
 }

@@ -185,7 +185,7 @@ namespace ns_compile_and_run {
                 
 
                 // 执行完毕， 需要清理所有临时文件
-                // FileUtil::RemoveTempFile(file_name);
+                FileUtil::RemoveTempFile(file_name);
                 LOG(INFO) << "执行完毕， 清理所有临时文件" << std::endl;
         }
 
