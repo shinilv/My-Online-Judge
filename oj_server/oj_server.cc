@@ -3,13 +3,23 @@
 #include "../common/log.hpp"
 #include "oj_control.hpp"
 #include <jsoncpp/json/json.h>
+#include <signal.h>
 
 
 using namespace ns_log;
 using namespace httplib;
 using namespace ns_control;
+static Control *ctrl_ptr = nullptr;
+
+void Recovery(int signo) {
+    ctrl_ptr->RecoveryMachine();
+}
 
 int main(int argc, char* argv[]) {
+
+    // 通过捕捉 SIGQUIT 信号， 一键上线主机
+    signal(SIGQUIT, Recovery);
+
     // 测试 分隔符
 
     // std::string str = "1 判断回文数 简单 1 300000";
@@ -27,6 +37,7 @@ int main(int argc, char* argv[]) {
     Server svr;
 
     Control ctrl;
+    ctrl_ptr = &ctrl;
 
 
 

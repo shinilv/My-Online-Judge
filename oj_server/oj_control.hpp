@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "../common/log.hpp"
 #include "../common/util.hpp"
-#include "oj_model.hpp"
+#include "_oj_model.hpp"
 #include "oj_view.hpp"
 #include <cassert>
 #include <fstream>
@@ -38,7 +38,15 @@ namespace ns_control {
         {}
         ~Machine() {}
 
+        
         // 更新负载
+
+        void ResetLoad() {
+            if (mtx) mtx->lock();
+            load = 0;
+            if (mtx) mtx->unlock();
+        }
+
         // 增加
         void IncLoad() {
             if (mtx) mtx->lock();
@@ -115,6 +123,7 @@ namespace ns_control {
             int online_num = online.size();
             if (online_num == 0) {
                 LOG(FATAL) << "所有的后端编译主机， 已经全部离线， 尽快查看" << std::endl;
+                // OnLineMachine();
                 mtx.unlock();
                 return false;
             }
@@ -142,6 +151,7 @@ namespace ns_control {
             for (auto iter = online.begin(); iter != online.end(); iter++) {
                 if (*iter == which) {
                     // 要离线的主机
+                    machines[which].ResetLoad();
                     online.erase(iter);
                     offline.push_back(which);
                     break;
@@ -152,6 +162,13 @@ namespace ns_control {
         }
         void OnLineMachine() {
             // 当所有主机都离线的时候。统一上线
+            mtx.lock();
+            // off --> on
+             online.insert(online.end(), offline.begin(), offline.end());
+             offline.clear();
+
+            mtx.unlock();
+            LOG(INFO) << "所有主机已上线" << std::endl;
         }
 
         void ShowMachines() {
@@ -186,11 +203,22 @@ namespace ns_control {
         Control() {
 
         }
+
+        void RecoveryMachine() {
+            _load_blance.OnLineMachine();
+        }
+
         // 根据题目数据构建网页， 输出型参数
         bool AllQuestions(std::string *html) {
             std::vector<Question> all;
             if (_model.GetAllQuestions(&all)) {
                 // 获取题目信息成功
+                // 对题号进行排序
+                sort(all.begin(), all.end(), [](auto& q1, auto& q2){
+                    int a = std::stoi(q1.number);
+                    int b = std::stoi(q2.number);
+                    return a < b;
+                });
                 _view.AllExpandHtml(all, html);
             } else {
                 *html = "获取网页失败";
@@ -199,7 +227,7 @@ namespace ns_control {
             return true;
         }
 
-        bool OneQuestion(const std::string& number, std::string* html) {
+        bool OneQuestion(std::string& number, std::string* html) {
             Question question;
             if (_model.GetOneQuestion(number, &question)) {
                 // 获取一个题目信息成功
@@ -213,7 +241,7 @@ namespace ns_control {
 
         // 判题功能
         // id, code, input
-        void Judge(const std::string number, const std::string in_json, std::string *out_json, bool IsRunTest) {
+        void Judge(std::string number, const std::string in_json, std::string *out_json, bool IsRunTest) {
             // 根据题目编号， 得到题目信息
             Question q;
             _model.GetOneQuestion(number, &q);

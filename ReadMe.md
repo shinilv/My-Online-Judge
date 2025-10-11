@@ -70,3 +70,54 @@ oj_control.hpp
 service_machine.conf     # 机器
 ~~~
 
+## mysql
+
+~~~
+use oj;
+
+create table if not exists `oj_questios`(
+    `number` int primary key auto_increment comment '题目编号',
+    `title` varchar(128) NOT NULL comment '题目标题',
+    `star` varchar(8) NOT NULL comment '题目难度',
+    `desc` text NOT NULL comment '题目描述',
+    `header` text NOT NULL comment '预设代码',
+    `tail` text NOT NULL comment '对应题目测试用例',
+    `test` text NOT NULL comment '对应题目判题代码',
+    `cpu_limit` int default 1 comment '对应题目时间限制',
+    `mem_limit` int default 2560000 comment '对应题目内存限制'
+)engine=InnoDB default charset=utf8;
+~~~
+
+插入信息举例
+~~~
+INSERT INTO oj_questios (
+    title,
+    star,
+    `desc`,
+    header,
+    tail,
+    test,
+    cpu_limit,
+    mem_limit
+) VALUES (
+    '求最大值',
+    'easy',
+    '给定一个数组， 返回数组中最大值\n\n输入：{1, 2, 3, 4, 5} 输出：5\n\n输入：{1, 2, 3, 4, 6} 输出：6',
+    '#include <bits/stdc++.h>\n\nusing namespace std;\n\nclass Solution {\npublic:\n    int Max(const vector<int>& nums) {\n\n        \n    }\n};',
+    '#ifndef COMPILER_ONLINE\n\n#include "header.cpp"\n\n#endif\n\nvoid Test1() {\n    int ret = Solution().Max({1, 2, 3, 4, 5});\n    if (ret == 5) {\n        std::cout << "通过用例1通过 ...OK!" << std::endl;\n    } else {\n        std::cout << "测试1不通过 ...Failed!" << std::endl;\n    }\n}\n\nvoid Test2() {\n    int ret = Solution().Max({1, 2, 3, 4, 6});\n    if (ret == 6) {\n        std::cout << "通过用例2通过 ...OK!" << std::endl;\n    } else {\n        std::cout << "测试2不通过 ...Failed!" << std::endl;\n    }\n}\n\n\n\nint main() {\n    Test1();\n    Test2();\n    \n}',
+    '#ifndef COMPILER_ONLINE \n\n#include "header.cpp"\n\n#endif\n\nvoid Test1() {\n    int ret = Solution().Max({1, 2, 3, 4, 5});\n    std::cout << ret << std::endl;\n\n    if (ret != 5) {\n        exit(-5);\n    }\n}\n\nvoid Test2() {\n    int ret = Solution().Max({1, 2, 3, 4, 6});\n    std::cout << ret << std::endl;\n\n    if (ret != 6) {\n        exit(-5);\n    }\n\n}\n\nvoid Test3() {\n    int ret = Solution().Max({1, 2, 3, 4, 6, 7, 8, 9, 100});\n    std::cout << ret << std::endl;\n\n    if (ret != 100) {\n        exit(-5);\n    }\n\n}\n\nint main() {\n    Test1();\n    Test2();\n    Test3();\n    return 0;\n}',
+    1,
+    256000
+);
+
+~~~
+
+
+使用第三方库，访问数据库
+
+model两个版本
+版本1: oj_model.hpp 文件版本
+
+版本2: _oj_model.hpp 数据库版本
+
+执行命令导出sql脚本 mysqldump -u root -p oj oj_questios > beifen.sql
