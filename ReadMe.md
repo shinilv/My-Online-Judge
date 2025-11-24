@@ -1,3 +1,17 @@
+# 项目获取与构建
+~~~
+git clone https://github.com/shinilv/My-Online-Judge.git
+
+cd Online_Judge
+
+mkdir build
+
+cd build
+
+cmake .. & make
+~~~
+
+
 # 项目核心是三个模块
 1. common：公共模块
 2. compile_server：编译与运行模块
