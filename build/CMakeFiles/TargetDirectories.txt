@@ -1,0 +1,4 @@
+/root/Online_Judge/build/CMakeFiles/compile_server.dir
+/root/Online_Judge/build/CMakeFiles/oj_server.dir
+/root/Online_Judge/build/CMakeFiles/edit_cache.dir
+/root/Online_Judge/build/CMakeFiles/rebuild_cache.dir
