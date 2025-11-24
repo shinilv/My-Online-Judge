@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/oj_server.dir/oj_server/oj_server.cc.o -o /root/Online_Judge/excu/oj_server   -L/root/Online_Judge/oj_server/lib  -Wl,-rpath,/root/Online_Judge/oj_server/lib -lctemplate -ljsoncpp -lmysqlclient 

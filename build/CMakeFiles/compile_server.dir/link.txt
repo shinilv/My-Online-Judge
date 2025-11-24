@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/compile_server.dir/compile_server/compile_server.cc.o -o /root/Online_Judge/excu/compile_server  -ljsoncpp 
