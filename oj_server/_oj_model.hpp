@@ -21,7 +21,7 @@
 #include <cassert>
 #include <fstream>
 
-#include "include/mysql.h"
+#include <mysql/mysql.h>
 
 namespace ns_model {
     using namespace ns_log;
